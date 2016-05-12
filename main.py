@@ -1,5 +1,6 @@
 import sys
 from PySide import QtGui
+from PySide import QtCore
 import widgets.orderedGrid
 
 class Example(QtGui.QMainWindow):
@@ -8,6 +9,9 @@ class Example(QtGui.QMainWindow):
         # Call the parent constructor
         super(Example, self).__init__()
 
+        # layout can't be applied to a mainWindow, Its a Main Window !
+        self.main_widget = QtGui.QWidget(self)
+        self.setCentralWidget(self.main_widget)
         self.init_ui()
 
     def init_ui(self):
@@ -41,25 +45,62 @@ class Example(QtGui.QMainWindow):
         self.setWindowTitle('Hello PySide')
 
         # set a tooltip for the parent widget
-        self.setToolTip('This is a <b>QWidget</b> widget')
+        self.setToolTip('This is a <b>QMainWindow</b> widget')
 
         # add more widgets
-        page_title = QtGui.QLabel("Hello again", self)
-        page_title.move(100, 80)
+        # page_title = QtGui.QLabel("Hello again", self)
+        # page_title.move(100, 80)
 
         # .move calls are not chained, absolute geometry is used
-        page_title.move(120, 80)
-        page_title.move(120, 200)
-        page_title.move(120, 210)
+        # page_title.move(120, 80)
+        # page_title.move(120, 200)
+        # page_title.move(120, 210)
 
-        page_title.setToolTip('This is a <b>Label</b> widget')
+        # page_title.setToolTip('This is a <b>Label</b> widget')
+
+        lcd = QtGui.QLCDNumber(self)
 
         btn = QtGui.QPushButton("Click me", self)
-        btn.move(100, 100)
         btn.setToolTip('This is a <b>QPushButton</b> widget')
+
+        btn1 = QtGui.QPushButton("Click me 2", self)
+        btn1.setToolTip('This is a <b>QPushButton</b> widget')
+
+        slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        slider.move(100, 130)
+
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(btn)
+        vbox.addWidget(btn1)
+        vbox.addWidget(lcd)
+        vbox.addWidget(slider)
+
+        self.main_widget.setLayout(vbox)
+
+        # Time to bind some signals
+        slider.valueChanged.connect(lcd.display)
+
+        # a `clicked` signal is emitted each time we click a button
+        btn.clicked.connect(self.button_clicked)
+        btn1.clicked.connect(self.button_clicked)
+        # What if we wand to have a custom slot ?
 
         self.show()
 
+    def button_clicked(self):
+        # todo suppose we want to use a property of another widget or the sender,
+        # What could we do ?
+        # user Sender, make the sender an attribute
+        # or use lambda functions ( will see soon ) 
+        sender = self.sender()
+        print sender
+        self.statusBar().showMessage(sender.text() + ' was pressed')
+
+    def keyPressEvent(self, e):
+        # Another way of handling signals , is overriding default signals
+        print e.key()
+        if e.key() == QtCore.Qt.Key_Escape:
+            self.close()
 
 def main():
     # Main Qt App starts here.
@@ -70,8 +111,8 @@ def main():
     # ex_two = Example()
 
     # create an widget with ordered grid
-    ordered_grid = widgets.orderedGrid.Ordered()
-    ordered_grid.show()
+    # ordered_grid = widgets.orderedGrid.Ordered()
+    # ordered_grid.show()
 
     # event handling and execution begins at app.exec_()
     sys.exit(app.exec_())
