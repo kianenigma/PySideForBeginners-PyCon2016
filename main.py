@@ -2,6 +2,24 @@ import sys
 from PySide import QtGui
 from PySide import QtCore
 import widgets.orderedGrid
+from threading import Timer
+
+
+class Communicate(QtCore.QObject):
+    ping = QtCore.Signal()
+
+    # Create an editing object
+    def __init__(self):
+        super(Communicate, self).__init__()
+
+        timer = QtCore.QTimer(self)
+        self.connect(timer, QtCore.SIGNAL("timeout()"), self.do_ping)
+        timer.start(1000)
+
+    def do_ping(self):
+        print "Emitting!"
+        self.ping.emit()
+
 
 class Example(QtGui.QMainWindow):
 
@@ -12,6 +30,7 @@ class Example(QtGui.QMainWindow):
         # layout can't be applied to a mainWindow, Its a Main Window !
         self.main_widget = QtGui.QWidget(self)
         self.setCentralWidget(self.main_widget)
+        self.ping_count = 0
         self.init_ui()
 
     def init_ui(self):
@@ -58,7 +77,7 @@ class Example(QtGui.QMainWindow):
 
         # page_title.setToolTip('This is a <b>Label</b> widget')
 
-        lcd = QtGui.QLCDNumber(self)
+        self.lcd = QtGui.QLCDNumber(self)
 
         btn = QtGui.QPushButton("Click me", self)
         btn.setToolTip('This is a <b>QPushButton</b> widget')
@@ -66,32 +85,45 @@ class Example(QtGui.QMainWindow):
         btn1 = QtGui.QPushButton("Click me 2", self)
         btn1.setToolTip('This is a <b>QPushButton</b> widget')
 
-        slider = QtGui.QSlider(QtCore.Qt.Horizontal)
-        slider.move(100, 130)
+        self.slider = QtGui.QSlider(QtCore.Qt.Horizontal)
+        self.slider.move(100, 130)
 
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(btn)
         vbox.addWidget(btn1)
-        vbox.addWidget(lcd)
-        vbox.addWidget(slider)
+        vbox.addWidget(self.lcd)
+        vbox.addWidget(self.slider)
 
         self.main_widget.setLayout(vbox)
 
         # Time to bind some signals
-        slider.valueChanged.connect(lcd.display)
+
+        # todo do you seeing what i see ?
+        # if the event has parameters, they will be assigned to variables
+        # if not a custom value could be used
+        # slider.valueChange.connect(lcd.display)
+
+        self.slider.valueChanged.connect(lambda x: self.on_slider_change(x, 2))
 
         # a `clicked` signal is emitted each time we click a button
         btn.clicked.connect(self.button_clicked)
         btn1.clicked.connect(self.button_clicked)
         # What if we wand to have a custom slot ?
 
+        # Time to use Custom signals
+        self.c = Communicate()
+        self.c.ping.connect(self.handle_foreign_ping)
+
         self.show()
+
+    def handle_foreign_ping(self):
+        print "ping"
 
     def button_clicked(self):
         # todo suppose we want to use a property of another widget or the sender,
         # What could we do ?
         # user Sender, make the sender an attribute
-        # or use lambda functions ( will see soon ) 
+        # or use lambda functions ( will see soon )
         sender = self.sender()
         print sender
         self.statusBar().showMessage(sender.text() + ' was pressed')
@@ -101,6 +133,11 @@ class Example(QtGui.QMainWindow):
         print e.key()
         if e.key() == QtCore.Qt.Key_Escape:
             self.close()
+
+    def on_slider_change(self, x, y):
+        print "Yooohooo, we have the x parameter :", x, y
+        self.lcd.display(x)
+
 
 def main():
     # Main Qt App starts here.
