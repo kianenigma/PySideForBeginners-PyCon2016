@@ -1,5 +1,6 @@
 import sys
 from PySide import QtGui
+import widgets.orderedGrid
 
 class Example(QtGui.QMainWindow):
 
@@ -21,7 +22,7 @@ class Example(QtGui.QMainWindow):
         # more on .connect later
         exit_action.triggered.connect(self.close)
 
-        dummy_action = QtGui.QAction('Dummy' , self)
+        dummy_action = QtGui.QAction('Dummy', self)
         dummy_action.setStatusTip('I Will do nothing')
 
         # Create a Menu Bar
@@ -45,6 +46,12 @@ class Example(QtGui.QMainWindow):
         # add more widgets
         page_title = QtGui.QLabel("Hello again", self)
         page_title.move(100, 80)
+
+        # .move calls are not chained, absolute geometry is used
+        page_title.move(120, 80)
+        page_title.move(120, 200)
+        page_title.move(120, 210)
+
         page_title.setToolTip('This is a <b>Label</b> widget')
 
         btn = QtGui.QPushButton("Click me", self)
@@ -59,7 +66,12 @@ def main():
     # Note that we can create more han one widget
     app = QtGui.QApplication(sys.argv)
     ex = Example()
-    #ex_two = Example()
+
+    # ex_two = Example()
+
+    # create an widget with ordered grid
+    ordered_grid = widgets.orderedGrid.Ordered()
+    ordered_grid.show()
 
     # event handling and execution begins at app.exec_()
     sys.exit(app.exec_())
